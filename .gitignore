@@ -1,0 +1,8 @@
+.cached_costs*
+.venv
+.ipynb_checkpoints
+test.py
+geckodriver.log
+.env
+run.bat
+chromedriver.exe
