@@ -5,7 +5,6 @@ import re
 import argparse
 import sys
 import os
-import pathlib
 
 from seleniumwire import webdriver
 from selenium.webdriver.common.by import By
