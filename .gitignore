@@ -6,3 +6,4 @@ geckodriver.log
 .env
 run.bat
 chromedriver.exe
+exports/*.json
