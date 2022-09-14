@@ -77,8 +77,9 @@ def datefrom_interceptor(request):
         request.url = re.sub(
             datefrom_regex, f"\\g<1>{startofsupply}\\g<3>", request.url)
         # request.headers['marker'] = 'x'
-        # print(request.url)
-
+        authorization = request.headers["authorization"]
+        key = request.headers["ocp-apim-subscription-key"]
+        logger.info(authorization, key) #TODO: save tokens for later use
 
 def datadump_interceptor(request, response):
     if '1/?Interval=' in request.url and 'GetAggregatedResults=false' in request.url and startofsupply in request.url:
