@@ -6,4 +6,5 @@ geckodriver.log
 .env
 run.bat
 chromedriver.exe
+__pycache__
 exports/*.json
