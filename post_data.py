@@ -26,33 +26,37 @@ elif args.verbose == 1:
 else:
     logger.setLevel(logging.DEBUG)
 
-baseUrl = os.getenv('API_URL')
+base_url = os.getenv('API_URL')
+api_user = os.getenv('API_USERNAME')
+api_password = os.getenv('API_PASSWORD')
+
+
 
 
 def post_hours():
     f = open('./exports/consumption_hours.json')
     jsonFile = json.load(f)
-    url = baseUrl + "/hours"
+    url = base_url + "/hours"
 
-    x = requests.post(url, json=jsonFile)
+    x = requests.post(url, json=jsonFile, auth=(api_user, api_password))
     logger.info(x.text)
 
 
 def post_months():
     f = open('./exports/consumption_months.json')
     jsonFile = json.load(f)
-    url = baseUrl + "/months"
+    url = base_url + "/months"
 
-    x = requests.post(url, json=jsonFile)
+    x = requests.post(url, json=jsonFile, auth=(api_user, api_password))
     logger.info(x.text)
 
 
 def post_days():
     f = open('./exports/consumption_days.json')
     jsonFile = json.load(f)
-    url = baseUrl + "/days"
+    url = base_url + "/days"
 
-    x = requests.post(url, json=jsonFile)
+    x = requests.post(url, json=jsonFile, auth=(api_user, api_password))
     logger.info(x.text)
 
 
