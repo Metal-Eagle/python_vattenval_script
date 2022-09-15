@@ -1,10 +1,11 @@
-import gzip
 import logging
-import time
-import re
 import argparse
+import time
 import sys
 import os
+import json
+
+import get_data
 
 from seleniumwire import webdriver
 from selenium.webdriver.common.by import By
@@ -52,12 +53,6 @@ username = os.getenv('USERNAME_VATTENFALL')
 password = os.getenv('PASSWORD_VATTENFALL')
 startofsupply = os.getenv('START_OF_SUPPLY')
 
-if startofsupply == '1970-12-31':
-    logger.error(f"'startofsupply:' not set")
-    sys.exit(-1)
-logger.info(f'startofsupply = {startofsupply}')
-
-
 if username == 'your@ema.il':
     logger.error(f"'username:' not set")
     sys.exit(-1)
@@ -70,45 +65,35 @@ if password == 'hunter123':
 
 
 def datefrom_interceptor(request):
-    if '1/?Interval=' in request.url and 'GetAggregatedResults=false' in request.url:
-        # print(request.url)
-        # print(request.headers)
-        logger.info(f'Fixing date to startofsupply={startofsupply}')
-        request.url = re.sub(
-            datefrom_regex, f"\\g<1>{startofsupply}\\g<3>", request.url)
-        # request.headers['marker'] = 'x'
-        # print(request.url)
+      if '/?Interval=' in request.url and 'GetAggregatedResults=false' in request.url:
+        logger.info("url is found", request.url)
+        authorization = request.headers["authorization"]
+        key = request.headers["ocp-apim-subscription-key"]
+        parsed_url = request.url.split("/")
+        businessPartnerId = parsed_url[8]
+        contractAccountId = parsed_url[9]
+        with open(f'{json_save_location}tokens.json', 'w', encoding='utf-8') as outfile:
+            json_output = {
+                'authorization': authorization,
+                'key': key,
+                'businessPartnerId': businessPartnerId,
+                'contractAccountId': contractAccountId,
+            }
+            json.dump(json_output, outfile, ensure_ascii=False, indent=4)
 
 
-def datadump_interceptor(request, response):
-    if '1/?Interval=' in request.url and 'GetAggregatedResults=false' in request.url and startofsupply in request.url:
-        logger.info('Capturing relevant data')
-        data_gz = request.response.body
-        assert request.response.status_code == 200
-        assert dict(request.response.headers)[
-            'content-type'] == 'application/json; charset=utf-8'
-        assert dict(request.response.headers)['content-encoding'] == 'gzip'
-        data_json_s = gzip.decompress(data_gz)
 
-        with open(f'{json_save_location}consumption.json', 'wb') as cost_cache_f:
-            cost_cache_f.write(data_json_s)
-        # If it needs to have a timeStamp
-        # with open(f'./exports/cached_costs_{int(time.time())}.json', 'wb') as cost_cache_f:
-        #     cost_cache_f.write(data_json_s)
-
-
-def get_data():
+def get_token():
     logger.info("Opening webdriver")
     chrome_options = webdriver.ChromeOptions()
     chrome_options.add_argument('--disable-gpu')
     chrome_options.add_argument('--disable-dev-shm-usage')
-    absolute_path ="./assets/chromedriver"
+    absolute_path = "./assets/chromedriver"
     driver = webdriver.Chrome(
         absolute_path,  options=chrome_options)
 
     logger.info("Opening setting interceptors")
     driver.request_interceptor = datefrom_interceptor
-    driver.response_interceptor = datadump_interceptor
 
     try:
         driver.get("https://www.vattenfall.nl/service/mijn-vattenfall/")
@@ -133,25 +118,31 @@ def get_data():
         elem.click()
 
         logger.info('Successfully logged in')
-
+        
         time.sleep(5)
         driver.maximize_window()
         elem = driver.find_element(By.XPATH, verbruik_xpath)
         assert elem.text == 'Verbruik'
         elem.click()
 
+
         elem = driver.find_element(By.XPATH, kosten_xpath)
         assert elem.text == 'Kosten'
         elem.click()
+
 
         # The rest is handled by interceptors, give them some time to complete
         # TODO: wait in a better way
         logger.info('Giving time for the right api call to finish')
         time.sleep(5)
-        logger.info(f'len(driver.requests) = {len(driver.requests)}')
     finally:
         pass
         driver.close()
 
 
-get_data()
+# Run in debug mode
+if args.verbose:
+    get_token()
+    get_data.months_data()
+    get_data.hours_data()
+    get_data.days_data()
