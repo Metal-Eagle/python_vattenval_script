@@ -5,8 +5,6 @@ import sys
 import os
 import json
 
-import get_data
-
 from seleniumwire import webdriver
 from selenium.webdriver.common.by import By
 
@@ -65,7 +63,7 @@ if password == 'hunter123':
 
 
 def datefrom_interceptor(request):
-      if '/?Interval=' in request.url and 'GetAggregatedResults=false' in request.url:
+    if '/?Interval=' in request.url and 'GetAggregatedResults=false' in request.url:
         logger.info("url is found", request.url)
         authorization = request.headers["authorization"]
         key = request.headers["ocp-apim-subscription-key"]
@@ -74,7 +72,7 @@ def datefrom_interceptor(request):
         contractAccountId = parsed_url[9]
         with open(f'{json_save_location}tokens.json', 'w', encoding='utf-8') as outfile:
             oneDayInMs = 86400000
-            expiresOn = time.time() + oneDayInMs
+            expiresOn = int(time.time()) + oneDayInMs
             json_output = {
                 'authorization': authorization,
                 'key': key,
@@ -84,9 +82,21 @@ def datefrom_interceptor(request):
             }
             json.dump(json_output, outfile, ensure_ascii=False, indent=4)
 
-
-
 def get_token():
+    # {json_save_location}tokens.json
+
+    f = open('./exports/tokens.json')
+    tokens = json.load(f)
+
+    try:
+        expiresOn = tokens["expiresOn"]
+        dateNow = int(time.time())
+        if expiresOn > dateNow:
+            logger.info("Token is still valid")
+            return
+    except KeyError:
+        logger.info("No token file")    
+    
     logger.info("Opening webdriver")
     chrome_options = webdriver.ChromeOptions()
     chrome_options.add_argument('--disable-gpu')
@@ -94,46 +104,34 @@ def get_token():
     absolute_path = "./assets/chromedriver"
     driver = webdriver.Chrome(
         absolute_path,  options=chrome_options)
-
     logger.info("Opening setting interceptors")
     driver.request_interceptor = datefrom_interceptor
-
     try:
         driver.get("https://www.vattenfall.nl/service/mijn-vattenfall/")
         logger.info(f'implicit_wait = {implicit_wait}s')
         driver.implicitly_wait(implicit_wait)
-
         # TODO: check if exists
         # elem = driver.find_element(By.ID, cookie_id)
         # assert elem.text == 'Ja, ik accepteer cookies'
         # elem.click()
-
         elem = driver.find_element(By.ID, username_field_id)
         elem.clear()
         elem.send_keys(username)
-
         elem = driver.find_element(By.ID, password_field_id)
         elem.clear()
         elem.send_keys(password)
-
         elem = driver.find_element(By.XPATH, login2_xpath)
         assert elem.text == 'Inloggen'
         elem.click()
-
         logger.info('Successfully logged in')
-        
         time.sleep(5)
         driver.maximize_window()
         elem = driver.find_element(By.XPATH, verbruik_xpath)
         assert elem.text == 'Verbruik'
         elem.click()
-
-
         elem = driver.find_element(By.XPATH, kosten_xpath)
         assert elem.text == 'Kosten'
         elem.click()
-
-
         # The rest is handled by interceptors, give them some time to complete
         # TODO: wait in a better way
         logger.info('Giving time for the right api call to finish')
@@ -146,6 +144,3 @@ def get_token():
 # Run in debug mode
 if args.verbose:
     get_token()
-    get_data.months_data()
-    get_data.hours_data()
-    get_data.days_data()
