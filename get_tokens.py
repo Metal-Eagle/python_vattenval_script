@@ -71,7 +71,7 @@ def datefrom_interceptor(request):
         businessPartnerId = parsed_url[8]
         contractAccountId = parsed_url[9]
         with open(f'{json_save_location}tokens.json', 'w', encoding='utf-8') as outfile:
-            oneDayInMs = 86400000
+            oneDayInMs = 86400000 #Adjust when necessary
             expiresOn = int(time.time()) + oneDayInMs
             json_output = {
                 'authorization': authorization,
