@@ -156,6 +156,6 @@ def days_data():
 
 # only on debug run
 if args.verbose:
-    # days_data()
+    days_data()
     hours_data()
-    # months_data()
+    months_data()
