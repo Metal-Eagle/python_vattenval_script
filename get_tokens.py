@@ -73,11 +73,14 @@ def datefrom_interceptor(request):
         businessPartnerId = parsed_url[8]
         contractAccountId = parsed_url[9]
         with open(f'{json_save_location}tokens.json', 'w', encoding='utf-8') as outfile:
+            oneDayInMs = 86400000
+            expiresOn = time.time() + oneDayInMs
             json_output = {
                 'authorization': authorization,
                 'key': key,
                 'businessPartnerId': businessPartnerId,
                 'contractAccountId': contractAccountId,
+                'expiresOn': expiresOn,
             }
             json.dump(json_output, outfile, ensure_ascii=False, indent=4)
 
