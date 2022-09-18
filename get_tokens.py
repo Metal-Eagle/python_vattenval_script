@@ -71,8 +71,8 @@ def datefrom_interceptor(request):
         businessPartnerId = parsed_url[8]
         contractAccountId = parsed_url[9]
         with open(f'{json_save_location}tokens.json', 'w', encoding='utf-8') as outfile:
-            oneDayInMs = 86400000 #Adjust when necessary
-            expiresOn = int(time.time()) + oneDayInMs
+            oneHourInMS = 3600000  # Adjust when necessary
+            expiresOn = int(time.time()) + oneHourInMS
             json_output = {
                 'authorization': authorization,
                 'key': key,
@@ -81,6 +81,7 @@ def datefrom_interceptor(request):
                 'expiresOn': expiresOn,
             }
             json.dump(json_output, outfile, ensure_ascii=False, indent=4)
+
 
 def get_token():
     # {json_save_location}tokens.json
@@ -91,12 +92,15 @@ def get_token():
     try:
         expiresOn = tokens["expiresOn"]
         dateNow = int(time.time())
-        if expiresOn > dateNow:
+
+        logger.info(f'expiresOn: {expiresOn} dateNow: {dateNow} total: {expiresOn - dateNow < 0}')
+
+        if expiresOn - dateNow < 0:
             logger.info("Token is still valid")
             return
     except KeyError:
-        logger.info("No token file")    
-    
+        logger.info("No token file")
+
     logger.info("Opening webdriver")
     chrome_options = webdriver.ChromeOptions()
     chrome_options.add_argument('--disable-gpu')
