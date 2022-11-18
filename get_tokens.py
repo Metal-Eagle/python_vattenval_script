@@ -37,9 +37,6 @@ login2_xpath = "//iam-login-form/div[1]/form/div/button"
 cookie_id = "acceptBtn"
 username_field_id = "username"
 password_field_id = "login_password"
-verbruik_xpath = "//vfc-navigation-header/div/div[3]/div/div/div[2]/ul/li[3]/a"
-kosten_xpath = "//vf-consumption-tabs-desktop/div/vfc-tab-group/div/div[3]/span[2]"
-
 
 def api_url_cost_filter(
     x): return 'api.vattenfall' in x.url and '/1/?Interval' in x.url
@@ -128,14 +125,6 @@ def get_token():
         assert elem.text == 'Inloggen'
         elem.click()
         logger.info('Successfully logged in')
-        time.sleep(5)
-        driver.maximize_window()
-        elem = driver.find_element(By.XPATH, verbruik_xpath)
-        assert elem.text == 'Verbruik'
-        elem.click()
-        elem = driver.find_element(By.XPATH, kosten_xpath)
-        assert elem.text == 'Kosten'
-        elem.click()
         # The rest is handled by interceptors, give them some time to complete
         # TODO: wait in a better way
         logger.info('Giving time for the right api call to finish')
