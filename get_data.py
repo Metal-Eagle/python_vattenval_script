@@ -32,6 +32,7 @@ elif args.verbose == 1:
 else:
     logger.setLevel(logging.DEBUG)
 
+defaultApiUrl = 'https://api.vattenfall.nl/featuresprd/api/v1/consumption/consumptions/'
 
 def hours_data():
     logger.info("Get hours data")
@@ -42,29 +43,23 @@ def hours_data():
     startDate = currentDate - datetime.timedelta(days=currentDate.weekday())
     endDate = startDate + datetime.timedelta(days=6)
 
-    url = "https://api.vattenfall.nl/api/mijnnuonprd/v2/consumptions/consumptions/" + \
-        tokens['businessPartnerId'] + "/" + tokens["contractAccountId"] + \
+    url = defaultApiUrl + tokens['businessPartnerId'] + "/" + tokens["contractAccountId"] + \
         "/5/?Interval=5&GetAggregatedResults=false&GetAmountDetails=false&GetAmounts=true&GetRoundedAmounts=false&GetComparedConsumption=false&DateFrom={}&DateTo={}".format(
             startDate.strftime('%Y-%m-%d'), endDate.strftime('%Y-%m-%d'))
-
 
     headers = {
         'ocp-apim-subscription-key': tokens['key'],
         'authorization': tokens['authorization'],
         'authority': 'api.vattenfall.nl',
         'accept': 'application/json, text/plain, */*',
-        'accept-language': 'nl,en;q=0.9,nl-NL;q=0.8,en-US;q=0.7',
-        'cache-control': 'no-cache',
+        'accept-language': 'nl-NL,nl;q=0.8',
         'origin': 'https://www.vattenfall.nl',
-        'pragma': 'no-cache',
         'referer': 'https://www.vattenfall.nl/',
-        'sec-ch-ua': '"Google Chrome";v="105", "Not)A;Brand";v="8", "Chromium";v="105"',
-        'sec-ch-ua-mobile': '?0',
-        'sec-ch-ua-platform': '"Windows"',
         'sec-fetch-dest': 'empty',
         'sec-fetch-mode': 'cors',
         'sec-fetch-site': 'same-site',
-        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36'
+        "sec-gpc": '1',
+        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36'
     }
 
     resp = requests.get(url=url,  headers=headers)
@@ -84,8 +79,7 @@ def months_data():
     endDate = datetime.date(currentDate.year, 12, calendar.monthrange(
         currentDate.year, currentDate.month)[1])
 
-    url = "https://api.vattenfall.nl/api/mijnnuonprd/v2/consumptions/consumptions/" + \
-        tokens['businessPartnerId'] + "/" + tokens["contractAccountId"] + \
+    url = defaultApiUrl + tokens['businessPartnerId'] + "/" + tokens["contractAccountId"] + \
         "/1/?Interval=1&GetAggregatedResults=false&GetAmountDetails=false&GetAmounts=true&GetRoundedAmounts=false&GetComparedConsumption=false&DateFrom={}&DateTo={}".format(
             startDate, endDate)
 
@@ -94,18 +88,14 @@ def months_data():
         'authorization': tokens['authorization'],
         'authority': 'api.vattenfall.nl',
         'accept': 'application/json, text/plain, */*',
-        'accept-language': 'nl,en;q=0.9,nl-NL;q=0.8,en-US;q=0.7',
-        'cache-control': 'no-cache',
+        'accept-language': 'nl-NL,nl;q=0.8',
         'origin': 'https://www.vattenfall.nl',
-        'pragma': 'no-cache',
         'referer': 'https://www.vattenfall.nl/',
-        'sec-ch-ua': '"Google Chrome";v="105", "Not)A;Brand";v="8", "Chromium";v="105"',
-        'sec-ch-ua-mobile': '?0',
-        'sec-ch-ua-platform': '"Windows"',
         'sec-fetch-dest': 'empty',
         'sec-fetch-mode': 'cors',
         'sec-fetch-site': 'same-site',
-        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36'
+        "sec-gpc": '1',
+        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36'
     }
 
     resp = requests.get(url=url,  headers=headers)
@@ -113,7 +103,6 @@ def months_data():
     # extracting data in json format
     with open(f'{json_save_location}consumption_months.json', 'w', encoding='utf-8') as outfile:
         json.dump(data, outfile, ensure_ascii=False, indent=4)
-
 
 def days_data():
     logger.info("Get days data")
@@ -124,28 +113,26 @@ def days_data():
     startDate = currentDate.strftime('%Y-%m-01')  # "2022-09-01"
     endDate = datetime.date(currentDate.year, currentDate.month, calendar.monthrange(
         currentDate.year, currentDate.month)[1])  # "2022-09-30"
-    url = "https://api.vattenfall.nl/api/mijnnuonprd/v2/consumptions/consumptions/" + \
-        tokens['businessPartnerId'] + "/" + tokens["contractAccountId"] + \
-        "/3/?Interval=3&GetAggregatedResults=false&GetAmountDetails=false&GetAmounts=true&GetRoundedAmounts=false&GetComparedConsumption=false&DateFrom={}&DateTo={}".format(
+    url = defaultApiUrl + tokens['businessPartnerId'] + "/" + tokens["contractAccountId"] + \
+        "/3/?" + \
+        "Interval=3&GetAggregatedResults=false&GetAmountDetails=false&GetAmounts=true&GetRoundedAmounts=false&GetComparedConsumption=false&DateFrom={}&DateTo={}".format(
             startDate, endDate)
+
+    logger.info(url)
 
     headers = {
         'ocp-apim-subscription-key': tokens['key'],
         'authorization': tokens['authorization'],
         'authority': 'api.vattenfall.nl',
         'accept': 'application/json, text/plain, */*',
-        'accept-language': 'nl,en;q=0.9,nl-NL;q=0.8,en-US;q=0.7',
-        'cache-control': 'no-cache',
+        'accept-language': 'nl-NL,nl;q=0.8',
         'origin': 'https://www.vattenfall.nl',
-        'pragma': 'no-cache',
         'referer': 'https://www.vattenfall.nl/',
-        'sec-ch-ua': '"Google Chrome";v="105", "Not)A;Brand";v="8", "Chromium";v="105"',
-        'sec-ch-ua-mobile': '?0',
-        'sec-ch-ua-platform': '"Windows"',
         'sec-fetch-dest': 'empty',
         'sec-fetch-mode': 'cors',
         'sec-fetch-site': 'same-site',
-        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36'
+        "sec-gpc": '1',
+        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36'
     }
 
     resp = requests.get(url=url,  headers=headers)
@@ -153,6 +140,7 @@ def days_data():
     # extracting data in json format
     with open(f'{json_save_location}consumption_days.json', 'w', encoding='utf-8') as outfile:
         json.dump(data, outfile, ensure_ascii=False, indent=4)
+
 
 # only on debug run
 if args.verbose:
