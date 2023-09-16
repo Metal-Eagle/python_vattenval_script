@@ -133,7 +133,7 @@ def get_token():
         # The rest is handled by interceptors, give them some time to complete
         # TODO: wait in a better way
         logger.info('Giving time for the right api call to finish')
-        time.sleep(15)
+        time.sleep(5)
     finally:
         pass
         driver.close()
