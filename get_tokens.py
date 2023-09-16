@@ -4,6 +4,8 @@ import time
 import sys
 import os
 import json
+from urllib.parse import urlparse
+from urllib.parse import parse_qs
 
 from seleniumwire import webdriver
 from selenium.webdriver.common.by import By
@@ -39,13 +41,8 @@ login2_xpath = "//iam-login-main-form/div[1]/form/div/button"
 #//*[@id="loginForm"]/div/button
 
 cookie_id = "acceptBtn"
-username_field_id = "username"
+username_field_id = "email-input"
 password_field_id = "login_password"
-verbruik_xpath = "//vfc-navigation-header/div/div[3]/div/div/div[2]/ul/li[3]/a"
-
-def api_url_cost_filter(
-    x): return 'api.vattenfall' in x.url and '/1/?Interval' in x.url
-
 
 datefrom_regex = r"(DateFrom=)(.*)(&)"
 
@@ -65,13 +62,15 @@ if password == 'hunter123':
 
 
 def datefrom_interceptor(request):
-    if '/?Interval=' in request.url and 'GetAggregatedResults=false' in request.url:
+    if '/api/v1/yearlybills' in request.url:
         logger.info("url is found", request.url)
         authorization = request.headers["authorization"]
         key = request.headers["ocp-apim-subscription-key"]
-        parsed_url = request.url.split("/")
-        businessPartnerId = parsed_url[8]
-        contractAccountId = parsed_url[9]
+        parsed_url = urlparse(request.url)
+
+        # Get you contractAccountId and businessPartnerId form url
+        businessPartnerId = parse_qs(parsed_url.query)['businessPartnerId'][0]
+        contractAccountId = parse_qs(parsed_url.query)['contractAccountId'][0]
         with open(f'{json_save_location}tokens.json', 'w', encoding='utf-8') as outfile:
             oneHourInMS = 3600000  # Adjust when necessary
             expiresOn = int(time.time()) + oneHourInMS
@@ -82,6 +81,7 @@ def datefrom_interceptor(request):
                 'contractAccountId': contractAccountId,
                 'expiresOn': expiresOn,
             }
+            logger.info(json_output)
             json.dump(json_output, outfile, ensure_ascii=False, indent=4)
 
 
@@ -130,11 +130,6 @@ def get_token():
         assert elem.text == 'Inloggen'
         elem.click()
         logger.info('Successfully logged in')
-        time.sleep(5)
-        driver.maximize_window()
-        elem = driver.find_element(By.XPATH, verbruik_xpath)
-        assert elem.text == 'Verbruik'
-        elem.click()
         # The rest is handled by interceptors, give them some time to complete
         # TODO: wait in a better way
         logger.info('Giving time for the right api call to finish')
