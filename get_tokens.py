@@ -10,6 +10,8 @@ from seleniumwire import webdriver
 from selenium.webdriver.common.by import By
 
 from dotenv import load_dotenv
+from watchdog.observers import Observer
+from watchdog.events import FileSystemEventHandler
 
 load_dotenv()
 
@@ -97,6 +99,7 @@ def get_token():
     logger.info("Opening setting interceptors")
     driver.request_interceptor = datefrom_interceptor
     try:
+
         driver.get("https://www.vattenfall.nl/service/mijn-vattenfall/")
         logger.info(f'implicit_wait = {implicit_wait}s')
         driver.implicitly_wait(implicit_wait)
@@ -110,10 +113,31 @@ def get_token():
         assert elem.text == 'Inloggen'
         elem.click()
         logger.info('Successfully logged in')
+        
+        observer = Observer()
+        event_handler = TokenFileEventHandler(f'{json_save_location}tokens.json', on_token_file_change, observer)
+        observer.schedule(event_handler, path=json_save_location, recursive=False)
+        observer.start()
         logger.info('Giving time for the right api call to finish')
-        time.sleep(60)
+        observer.join(timeout=60)  # Wait for the event or timeout after 60 seconds
     finally:
+        observer.stop()
+        observer.join()
         driver.close()
+
+class TokenFileEventHandler(FileSystemEventHandler):
+    def __init__(self, file_path, callback, observer):
+        self._file_path = file_path
+        self._callback = callback
+        self._observer = observer
+
+    def on_modified(self, event):
+        if event.src_path == self._file_path:
+            self._callback(self._observer)
+
+def on_token_file_change(observer):
+    logger.info("Token file has been updated")
+    observer.stop()
 
 if args.verbose:
     get_token()
