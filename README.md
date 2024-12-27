@@ -6,7 +6,8 @@
 2. Get [chromedriver](https://googlechromelabs.github.io/chrome-for-testing/) and put it in the assets folder
 3. Update .env file
 4. Check if de bat-file has the correct path to the python.exe, and update path to script, if you don't edit example file on C:\script
-5. Add bat-file to Windows Scheduler 
+5. Add bat-file to Windows Scheduler
 
-# Credits
+### Credits
+
 [nilswiersma](https://github.com/nilswiersma) - [repo](https://github.com/nilswiersma/vattenfall)
