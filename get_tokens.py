@@ -88,20 +88,19 @@ def datefrom_interceptor(request):
 def get_token():
     # {json_save_location}tokens.json
 
-    f = open('./exports/tokens.json')
-    tokens = json.load(f)
-
     try:
-        expiresOn = tokens["expiresOn"]
-        dateNow = int(time.time())
+        with open('./exports/tokens.json') as f:
+            tokens = json.load(f)
+            expiresOn = tokens["expiresOn"]
+            dateNow = int(time.time())
 
-        logger.info(f'expiresOn: {expiresOn} dateNow: {dateNow} total: {expiresOn - dateNow < 0}')
+            logger.info(f'expiresOn: {expiresOn} dateNow: {dateNow} total: {expiresOn - dateNow < 0}')
 
-        if expiresOn - dateNow < 0:
-            logger.info("Token is still valid")
-            return
-    except KeyError:
-        logger.info("No token file")
+            if expiresOn - dateNow > 0:
+                logger.info("Token is still valid")
+                return
+    except (KeyError, FileNotFoundError):
+        logger.info("No valid token file found, proceeding with login")
 
     logger.info("Opening webdriver")
     chrome_options = webdriver.ChromeOptions()
@@ -133,7 +132,7 @@ def get_token():
         # The rest is handled by interceptors, give them some time to complete
         # TODO: wait in a better way
         logger.info('Giving time for the right api call to finish')
-        time.sleep(15)
+        time.sleep(60)
     finally:
         pass
         driver.close()
