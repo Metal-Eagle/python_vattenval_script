@@ -63,7 +63,7 @@ def datefrom_interceptor(request):
         businessPartnerId = parse_qs(parsed_url.query)['businessPartnerId'][0]
         contractAccountId = parse_qs(parsed_url.query)['contractAccountId'][0]
         with open(f'{json_save_location}tokens.json', 'w', encoding='utf-8') as outfile:
-            oneHourInMS = 3600000
+            oneHourInMS = 3600
             expiresOn = int(time.time()) + oneHourInMS
             json_output = {
                 'authorization': authorization,
