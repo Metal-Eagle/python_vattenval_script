@@ -63,8 +63,8 @@ def datefrom_interceptor(request):
         businessPartnerId = parse_qs(parsed_url.query)['businessPartnerId'][0]
         contractAccountId = parse_qs(parsed_url.query)['contractAccountId'][0]
         with open(f'{json_save_location}tokens.json', 'w', encoding='utf-8') as outfile:
-            oneHourInMS = 3600
-            expiresOn = int(time.time()) + oneHourInMS
+            oneHourInS = 3600
+            expiresOn = int(time.time()) + oneHourInS
             json_output = {
                 'authorization': authorization,
                 'key': key,
@@ -81,6 +81,10 @@ def get_token():
             tokens = json.load(f)
             expiresOn = tokens["expiresOn"]
             dateNow = int(time.time())
+
+            if expiresOn < dateNow:
+                logger.info("Token has expired")
+                raise KeyError("Token has expired")
 
             logger.info(f'expiresOn: {expiresOn} dateNow: {dateNow} total: {expiresOn - dateNow < 0}')
 
@@ -99,7 +103,8 @@ def get_token():
     logger.info("Opening setting interceptors")
     driver.request_interceptor = datefrom_interceptor
     try:
-
+        driver.get("https://patrickhlauke.github.io/recaptcha/")
+        driver.switch_to.new_window('tab')
         driver.get("https://www.vattenfall.nl/service/mijn-vattenfall/")
         logger.info(f'implicit_wait = {implicit_wait}s')
         driver.implicitly_wait(implicit_wait)
